@@ -4,8 +4,6 @@ from pathlib import Path
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from concurrent.futures import ThreadPoolExecutor
-
 def check_and_upload(weka_path, gcs_path):
     weka_path = weka_path.replace('weka://', '/')
     check_command = f"gsutil ls {gcs_path}"
