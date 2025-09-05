@@ -9,9 +9,7 @@ def check_and_upload(weka_path, gcs_path):
     check_command = f"gsutil ls {gcs_path}"
     
     if os.system(check_command) != 0:
-        command = f"""\
-            gsutil -o "GSUtil:parallel_composite_upload_threshold=150M" -m rsync -r {weka_path} {gcs_path} \
-        """
+        command = f"""gsutil -o "GSUtil:parallel_composite_upload_threshold=150M" -m rsync -r {weka_path} {gcs_path}"""
         print(f'Executing command:\n{command}')
         os.system(command)
     else:
@@ -19,12 +17,21 @@ def check_and_upload(weka_path, gcs_path):
 
 
 def check_and_download(gcs_path, local_path):
+    # Ensure gcs_path ends with /*
+    if not gcs_path.endswith('/*'):
+        gcs_path = gcs_path.rstrip('/') + '/*'
+    
+    # Ensure local_path ends with /
+    if not local_path.endswith('/'):
+        local_path = local_path + '/'
+    
+    # Create parent directories if they don't exist
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    
     check_command = f"test -d {local_path}"
     
     if os.system(check_command) != 0:
-        command = f"""\
-            gsutil -m cp -r {gcs_path} {local_path} \
-        """
+        command = f"""gsutil -m cp -r {gcs_path} {local_path}"""
         print(f'Executing command:\n{command}')
         os.system(command)
     else:
