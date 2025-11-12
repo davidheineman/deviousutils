@@ -28,7 +28,7 @@ def push_parquet_to_hf(file_path, hf_dataset_name, split_name='main', subset_nam
         pd.set_option('display.max_columns', None)
         print(df)
 
-    login(new_session=False)
+    login()
     api = HfApi()
     
     # Check if the repo exists; create it if not
