@@ -31,3 +31,10 @@ from deviousutils.gcs import check_and_upload, check_and_download
 check_and_upload(weka_path, gcs_path)
 check_and_download(gcs_path, local_path)
 ```
+
+### arxiv utils
+
+```sh
+# launch claude code with the arxiv source for a paper
+arxiv 2605.00347v1
+```
