@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 from huggingface_hub import HfApi, login, hf_hub_download
 from pathlib import Path
 
@@ -12,21 +11,16 @@ def push_parquet_to_hf(file_path, hf_dataset_name, split_name='main', subset_nam
     if file_suffix == '.parquet':
         import pyarrow.parquet as pq
         print('Loading sanity check...')
-        df = pq.read_table(file_path).slice(0, 100).to_pandas()
-        pd.set_option('display.max_columns', None)
-        print(df)
+        table = pq.read_table(file_path).slice(0, 100)
+        print(table.to_string())
     elif file_suffix == '.jsonl':
         import json
         print('Loading sanity check...')
         with open(file_path, 'r') as f:
-            lines = []
             for i, line in enumerate(f):
-                if i >= 100:
+                if i >= 5:
                     break
-                lines.append(json.loads(line.strip()))
-        df = pd.DataFrame(lines)
-        pd.set_option('display.max_columns', None)
-        print(df)
+                print(json.dumps(json.loads(line.strip()), indent=2))
 
     login()
     api = HfApi()

@@ -2,6 +2,7 @@
 """Download arXiv TeX source and open it in Claude Code."""
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -9,7 +10,7 @@ import tarfile
 import urllib.request
 from pathlib import Path
 
-
+ARXIV_URL_RE = re.compile(r"arxiv\.org/(?:abs|pdf|e-print|html)/([^\s/?#]+)")
 ARXIV_EPRINT_URL = "https://arxiv.org/e-print/{arxiv_id}"
 CACHE_DIR = Path.home() / ".cache" / "arxiv"
 
@@ -42,13 +43,22 @@ def download_source(arxiv_id: str, dest_dir: Path) -> None:
         tarball.rename(dest_dir / "main.tex")
 
 
+def parse_arxiv_id(raw: str) -> str:
+    """Extract arXiv ID from a bare ID or URL like arxiv.org/abs/..., /pdf/..., etc."""
+    raw = raw.strip()
+    m = ARXIV_URL_RE.search(raw)
+    if m:
+        return m.group(1).removesuffix(".pdf")
+    return raw
+
+
 def main():
     parser = argparse.ArgumentParser(description="view arxiv papers in Claude code")
-    parser.add_argument("arxiv_id", help="e.g. 2605.00347v1")
+    parser.add_argument("arxiv_id", help="arXiv ID or URL (e.g. 2605.00347v1, https://arxiv.org/abs/2605.00347v1)")
     parser.add_argument("--refresh", action="store_true")
     args = parser.parse_args()
 
-    arxiv_id = args.arxiv_id.strip()
+    arxiv_id = parse_arxiv_id(args.arxiv_id)
 
     if shutil.which("claude") is None:
         print("Error: `claude` CLI not found in PATH", file=sys.stderr)

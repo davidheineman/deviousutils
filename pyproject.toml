@@ -4,12 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deviousutils"
-version = "0.2.0"
+version = "0.2.1"
 requires-python = ">=3.8"
 dependencies = [
     "huggingface_hub",
     "yaspin", # progress bar!
-    "pandas" # only for visualizing data before upload, can probably remove
 ]
 
 [project.scripts]
