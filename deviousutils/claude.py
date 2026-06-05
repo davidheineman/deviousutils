@@ -43,7 +43,8 @@ def run_claude_with_cache(
     model_name: str = "claude-sonnet-4-20250514",
     cache_dir=None,
     verbose=False,
-    show_spinner=False
+    show_spinner=False,
+    working_dir=None,
 ):
     # Set the model
     os.environ["ANTHROPIC_MODEL"] = model_name
@@ -53,11 +54,13 @@ def run_claude_with_cache(
     if cache_dir is None:
         cache_dir = create_cache_dir()
 
-    # Change to cache directory
+    # Resolve target directory
     original_cwd = Path.cwd()
     rollout_dir = cache_dir / "rollout"
     rollout_dir.mkdir(parents=True, exist_ok=True)
-    os.chdir(rollout_dir)
+    target_dir = Path(working_dir) if working_dir is not None else rollout_dir
+    if working_dir is None:
+        os.chdir(rollout_dir)
 
     spinner = None
     if show_spinner:
@@ -72,9 +75,12 @@ def run_claude_with_cache(
         argv = [
             "claude",
             "--verbose",
-            "--output-format", "stream-json",
-            "-p", escaped_instruction,
-            "--allowedTools", *ALLOWED_TOOLS,
+            "--output-format",
+            "stream-json",
+            "-p",
+            escaped_instruction,
+            "--allowedTools",
+            *ALLOWED_TOOLS,
             # "--permission-prompt-tool", "auto",
         ]
 
@@ -84,7 +90,8 @@ def run_claude_with_cache(
         process = subprocess.Popen(
             argv,
             shell=False,
-            stdin=subprocess.DEVNULL, # <-- prevents EBADF on fd 0
+            cwd=str(target_dir),
+            stdin=subprocess.DEVNULL,  # <-- prevents EBADF on fd 0
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -130,7 +137,9 @@ def run_claude_with_cache(
         result = Result(process.returncode, "".join(output_lines), "".join(error_lines))
 
         if result.returncode != 0:
-            raise RuntimeError(f"claude failed with return code {result.returncode}. stderr: {result.stderr}")
+            raise RuntimeError(
+                f"claude failed with return code {result.returncode}. stderr: {result.stderr}"
+            )
 
         if spinner:
             spinner.ok("done!")
@@ -151,4 +160,5 @@ def run_claude_with_cache(
             spinner.fail("fail")
         raise
     finally:
-        os.chdir(original_cwd)
+        if working_dir is None:
+            os.chdir(original_cwd)
